@@ -1,0 +1,44 @@
+模型状态接口
+/client/common/getModelStatus?model=modelName
+请求方式
+GET
+响应方式
+JSON
+请求参数 (model)
+把modelName替换为具体的模型名称
+返回结果
+复制
+{
+  "code": 0,
+  "data": {
+    "error": "",
+    "status": true
+  },
+  "msg": "success"
+}
+返回结果
+code
+类型: number
+示例: 0
+描述:
+接口状态码
+msg
+类型: string
+示例: success
+描述:
+接口信息
+data
+类型: object
+示例: {}
+描述:
+接口数据
+data.error
+类型: string
+示例: 官网崩了，等官网恢复
+描述:
+模型状态错误详情
+data.status
+类型: boolean
+示例: true，模型正常；false，模型异常
+描述:
+模型状态

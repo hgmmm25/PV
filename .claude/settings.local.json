@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip list *)",
+      "Bash(python -c \"from r2_browser import thumb_url\")",
+      "Bash(python -c \"import app\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('r2_browser.py', doraise=True\\); py_compile.compile\\('app.py', doraise=True\\); print\\('OK'\\)\")",
+      "Bash(rm -rf __pycache__)",
+      "Bash(python -c \"from r2_browser import list_images, get_r2_client, thumb_url, _R2_BUCKET, _R2_PUBLIC_DOM; print\\('All imports OK'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('r2_browser.py', encoding='utf-8'\\).read\\(\\)\\); print\\('r2_browser.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('app.py: OK'\\)\")",
+      "Bash(taskkill //F //IM streamlit.exe)",
+      "Bash(xxd \"D:/PV/start.bat\")"
+    ]
+  }
+}

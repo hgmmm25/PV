@@ -1,0 +1,13 @@
+# 環境變數（含敏感憑證）
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
