@@ -288,6 +288,57 @@ elif generation_mode == "多圖合成":
                 st.session_state.multi_img_count -= 1
                 st.rerun()
 
+# ---------------------------------------------------------------------------
+# 圖片 → Base64 轉換工具
+# ---------------------------------------------------------------------------
+with st.expander("🔄 圖片 → Base64 轉換工具", expanded=False):
+    st.markdown("上傳圖片後自動轉為 Base64 data URI，可直接複製使用。")
+
+    uploaded_file = st.file_uploader(
+        "選擇圖片檔案",
+        type=["png", "jpg", "jpeg"],
+        key="agn_b64_uploader",
+        help="支援 PNG、JPG、JPEG 格式。上傳後自動轉為 Base64 data URI。",
+    )
+    if uploaded_file:
+        try:
+            img = Image.open(uploaded_file).convert("RGB")
+            buf = BytesIO()
+            img.save(buf, format="PNG")
+            b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+            st.session_state["agn_b64_result"] = f"data:image/png;base64,{b64_str}"
+            st.session_state["agn_b64_filename"] = uploaded_file.name
+        except Exception as e:
+            st.error(f"❌ 圖片處理失敗：{e}")
+
+    # 顯示結果
+    if st.session_state.get("agn_b64_result"):
+        _data_uri = st.session_state["agn_b64_result"]
+        _fname = st.session_state.get("agn_b64_filename", "image.png")
+        _b64_prefix_len = _data_uri.find(",") + 1 if _data_uri.startswith("data:") else 0
+        _b64_only = _data_uri[_b64_prefix_len:]
+        _size_kb = len(_b64_only) * 3 / 4 / 1024
+
+        st.markdown(f"**🖼️ 來源：** `{_fname}`　|　**📦 Base64 大小：** {_size_kb:.1f} KB")
+
+        try:
+            _preview_bytes = base64.b64decode(_b64_only)
+            st.image(Image.open(BytesIO(_preview_bytes)), caption="預覽", width="stretch")
+        except Exception:
+            pass
+
+        _b64_col1, _b64_col2 = st.columns([3, 1])
+        with _b64_col1:
+            st.code(_data_uri, language=None)
+        with _b64_col2:
+            st.download_button(
+                label="📥 下載 Base64 文字檔",
+                data=_data_uri,
+                file_name=f"{_fname.rsplit('.', 1)[0]}_base64.txt",
+                mime="text/plain",
+                key="agn_b64_download",
+            )
+
 # 進階參數
 with st.expander("⚙️ 進階參數調整", expanded=False):
     adv_col1, adv_col2, adv_col3 = st.columns(3)
