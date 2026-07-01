@@ -11,7 +11,17 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('r2_browser.py', encoding='utf-8'\\).read\\(\\)\\); print\\('r2_browser.py: OK'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('app.py: OK'\\)\")",
       "Bash(taskkill //F //IM streamlit.exe)",
-      "Bash(xxd \"D:/PV/start.bat\")"
+      "Bash(xxd \"D:/PV/start.bat\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('grs_pic.py', doraise=True\\); print\\('grs_pic.py: OK'\\)\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('agn_pic.py', doraise=True\\); print\\('agn_pic.py: OK'\\)\")",
+      "Bash(python -c \"import streamlit as st; print\\(hasattr\\(st, 'html'\\)\\); print\\(hasattr\\(st.components.v1, 'html'\\)\\); print\\(hasattr\\(st.components.v1, 'iframe'\\)\\)\")",
+      "Bash(python -c \"import streamlit as st; help\\(st.html\\)\")",
+      "Bash(python -c \"import streamlit.components.v1 as c; print\\(type\\(c.html\\)\\); print\\(type\\(c.iframe\\)\\)\")",
+      "Bash(pip show *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(from streamlit.components.v1 import html)",
+      "Bash(git commit -m 'fix: replace deprecated st.components.v1.html with st.file_uploader-only approach *)"
     ]
   }
 }
