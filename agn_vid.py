@@ -74,11 +74,18 @@ CREATE_URL = f"{API_BASE}/v1/videos"
 POLL_URL = f"{API_BASE}/agnesapi"
 MODEL_NAME = "agnes-video-v2.0"
 
-FRAME_RATE_OPTIONS = [24, 30, 50]
-FRAME_OPTIONS_BY_FPS = {
-    24: [(241, "10 秒"), (441, "18 秒")],
-    30: [(241, "8 秒"), (361, "12 秒")],
-    50: [(401, "8 秒")],
+FRAME_OPTIONS_BY_RES_FPS = {
+    "1080p": {
+        "fps": [24, 30],  # 1080p 下取消 50 fps
+        24: [(121, "約 5 秒"), (169, "最大長度 約 7 秒")],
+        30: [(169, "最大長度 約 5.6 秒")],
+    },
+    "720p": {
+        "fps": [24, 30, 50],
+        24: [(121, "約 5 秒"), (241, "約 10 秒"), (409, "最大長度 約 17 秒")],
+        30: [(241, "精準 8 秒"), (361, "精準 12 秒")],
+        50: [(401, "精準 8 秒")],
+    },
 }
 
 STATUS_QUEUED = "queued"
@@ -336,8 +343,12 @@ with st.expander("⚙️ 進階參數調整", expanded=False):
         resolution_label: str = st.selectbox("📐 解析度 (Resolution)", options=list(resolution_options.keys()), index=2)
         width, height = resolution_options[resolution_label]
     with adv_col2:
-        frame_rate: int = st.selectbox("幀率 (frame_rate)", options=FRAME_RATE_OPTIONS, index=0, format_func=lambda x: f"{x} fps")
-        _frame_options = FRAME_OPTIONS_BY_FPS[frame_rate]
+        # 根據所選解析度決定 1080p / 720p 模式
+        _res_tier = "1080p" if height == 1080 else "720p"
+        _res_frame_cfg = FRAME_OPTIONS_BY_RES_FPS[_res_tier]
+        _fps_options = _res_frame_cfg["fps"]
+        frame_rate: int = st.selectbox("幀率 (frame_rate)", options=_fps_options, index=0, format_func=lambda x: f"{x} fps")
+        _frame_options = _res_frame_cfg[frame_rate]
         _frame_labels = [f"{frames} 幀（{label}）" for frames, label in _frame_options]
         _selected_idx = st.selectbox("幀數 (num_frames)", options=range(len(_frame_options)), index=0, format_func=lambda i: _frame_labels[i])
         num_frames = _frame_options[_selected_idx][0]
