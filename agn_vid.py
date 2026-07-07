@@ -414,15 +414,24 @@ def poll_video_status(video_id: str, headers: dict) -> dict | None:
                 status = data.get("status", "")
                 progress = data.get("progress", 0)
                 progress_bar.progress(min(progress, 100))
-                
+
                 status_text = {STATUS_QUEUED: "🟡 排隊中", STATUS_IN_PROGRESS: "🔵 生成中", STATUS_COMPLETED: "🟢 已完成", STATUS_FAILED: "🔴 失敗"}.get(status, f"❓ {status}")
                 status_placeholder.info(f"**狀態**：{status_text} | **進度**：{progress}% | **已輪詢**：{poll_count} 次")
-                
+
                 if status == STATUS_COMPLETED:
                     return data
                 if status == STATUS_FAILED:
                     st.error(f"❌ 視訊生成失敗：{data.get('error', '未知錯誤')}")
                     return None
+            else:
+                # 非 200 回應（如 content_policy_violation 400/403）→ 立即中止
+                try:
+                    err_data = resp.json()
+                    err_msg = err_data.get("error", {}).get("message", "") if isinstance(err_data.get("error"), dict) else str(err_data.get("error", resp.text))
+                except Exception:
+                    err_msg = resp.text
+                st.error(f"❌ 輪詢收到錯誤回應（HTTP {resp.status_code}）：{err_msg}")
+                return None
         except Exception as e:
             status_placeholder.warning(f"⚠️ 輪詢異常：{e}，繼續重試…")
         time.sleep(POLL_INTERVAL_SECONDS)
@@ -479,6 +488,14 @@ if st.button("🚀 開始生成視訊", type="primary", width="stretch"):
                         if _s == STATUS_FAILED:
                             st.error(f"❌ 失敗：{_d.get('error', '未知')}")
                             break
+                    else:
+                        try:
+                            _err = _r.json()
+                            _em = _err.get("error", {}).get("message", "") if isinstance(_err.get("error"), dict) else str(_err.get("error", _r.text))
+                        except Exception:
+                            _em = _r.text
+                        st.error(f"❌ 輪詢收到錯誤回應（HTTP {_r.status_code}）：{_em}")
+                        break
                 except Exception:
                     pass
                 time.sleep(POLL_INTERVAL_SECONDS)
