@@ -21,7 +21,16 @@
       "Bash(git checkout *)",
       "Bash(git add *)",
       "Bash(from streamlit.components.v1 import html)",
-      "Bash(git commit -m 'fix: replace deprecated st.components.v1.html with st.file_uploader-only approach *)"
+      "Bash(git commit -m 'fix: replace deprecated st.components.v1.html with st.file_uploader-only approach *)",
+      "Bash(git push *)",
+      "Bash(where gh *)",
+      "Bash(cmd.exe /c \"where gh\")",
+      "Bash(powershell -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(cmd.exe //c \"where gh\")",
+      "Bash(git fetch *)",
+      "Bash(gh pr *)",
+      "Bash(git commit -m 'fix\\(agn_vid\\): correct frame count limits per resolution and remove 50fps for 1080p *)",
+      "Bash(git commit -m 'fix\\(agn_vid\\): handle non-200 poll responses \\(e.g. content_policy_violation\\) to prevent stuck polling loop *)"
     ]
   }
 }

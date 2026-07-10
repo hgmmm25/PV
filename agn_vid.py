@@ -4,7 +4,6 @@ Agnes Video V2.0 — Streamlit GUI 桌面網頁應用程式 (效能優化版)
 基於 Agnes-Video-V2.0 非同步 API，支援：
   • 文生視頻 (Text-to-Video)
   • 圖生視頻 (Image-to-Video)
-  • 多圖視頻生成 (Multi-Image Video)
   • 關鍵幀動畫 (Keyframe Animation)
 """
 
@@ -192,7 +191,7 @@ with st.sidebar:
 
     generation_mode: str = st.selectbox(
         "🎞️ 生成模式",
-        options=["文生視頻", "圖生視頻", "多圖視頻生成", "關鍵幀動畫"],
+        options=["文生視頻", "圖生視頻", "關鍵幀動畫"],
         index=0,
         help="選擇您要使用的視訊生成工作流。",
     )
@@ -260,41 +259,6 @@ if generation_mode == "圖生視頻":
         placeholder="https://example.com/image.png",
         help="輸入一張可公開訪問的圖片網址，或從左側 R2 相簿選取。",
     )
-
-elif generation_mode == "多圖視頻生成":
-    st.markdown("#### 🖼️ 參考圖片 URLs（至少兩張）")
-    if r2_picked:
-        if st.button("➕ 加入 R2 選取的圖片", key="multi_add_r2", width="stretch"):
-            filled = False
-            for _i in range(st.session_state.multi_img_count):
-                _k = f"multi_img_{_i}"
-                if not st.session_state.get(_k, "").strip():
-                    st.session_state[_k] = r2_picked
-                    filled = True
-                    break
-            if not filled:
-                st.session_state[f"multi_img_{st.session_state.multi_img_count}"] = r2_picked
-                st.session_state.multi_img_count += 1
-            st.rerun()
-
-    if "multi_img_count" not in st.session_state:
-        st.session_state.multi_img_count = 2
-
-    for i in range(st.session_state.multi_img_count):
-        url = st.text_input(f"圖片 URL #{i + 1}", key=f"multi_img_{i}", placeholder="https://example.com/image.png")
-        if url.strip():
-            extra_image_urls.append(url.strip())
-
-    col_add, col_rem = st.columns(2)
-    with col_add:
-        if st.button("➕ 增加一張圖片", width="stretch"):
-            st.session_state.multi_img_count += 1
-            st.rerun()
-    with col_rem:
-        if st.button("➖ 移除最後一張", width="stretch"):
-            if st.session_state.multi_img_count > 2:
-                st.session_state.multi_img_count -= 1
-                st.rerun()
 
 elif generation_mode == "關鍵幀動畫":
     st.markdown("#### 🖼️ 關鍵幀圖片 URLs（至少兩張）")
@@ -374,11 +338,6 @@ def build_payload() -> dict | None:
             st.warning("⚠️ 圖生視頻模式需要輸入至少一張圖片 URL。")
             return None
         payload["image"] = image_url_single.strip()
-    elif generation_mode == "多圖視頻生成":
-        if len(extra_image_urls) < 2:
-            st.warning("⚠️ 多圖視頻生成模式需要至少兩張圖片 URL。")
-            return None
-        payload["extra_body"] = {"image": extra_image_urls}
     elif generation_mode == "關鍵幀動畫":
         if len(extra_image_urls) < 2:
             st.warning("⚠️ 關鍵幀動畫模式需要至少兩張關鍵幀圖片 URL。")
@@ -501,13 +460,39 @@ if st.button("🚀 開始生成視訊", type="primary", width="stretch"):
                 time.sleep(POLL_INTERVAL_SECONDS)
 
     if final_data:
-        video_url = final_data.get("remixed_from_video_id", "")
+        # 嘗試多個可能的影片 URL 欄位名（不同模式/版本可能使用不同欄位）
+        output = final_data.get("output")
+        video_url = (
+            final_data.get("remixed_from_video_id")
+            or final_data.get("video_url")
+            or final_data.get("url")
+            or (output.get("video_url") if isinstance(output, dict) else None)
+            or ""
+        )
+        # 確保 video_url 為字串
+        video_url = str(video_url).strip() if video_url else ""
+
         st.divider()
         st.subheader("🎉 影片生成完成！")
-        if video_url:
-            st.video(video_url)
+
+        if video_url and video_url.startswith("http"):
+            # 先嘗試 st.video，失敗則回退到 HTML <video> 標籤
+            try:
+                st.video(video_url)
+            except Exception:
+                st.markdown(
+                    f'<video src="{video_url}" controls autoplay loop muted style="width:100%;max-width:800px;"></video>',
+                    unsafe_allow_html=True,
+                )
             st.markdown(f"📥 [點擊下載影片]({video_url})")
-        with st.expander("📄 查看完整 API 回應", expanded=False):
+        else:
+            # 找不到影片 URL 時，列出所有回應 key 幫助除錯
+            st.warning("⚠️ API 回應中未找到影片 URL，請查看下方完整回應以確認欄位名稱。")
+            st.caption(f"已檢查欄位：remixed_from_video_id / video_url / url / output.video_url")
+            if video_url:
+                st.code(f"取得的值（非 http 開頭）：{video_url}")
+
+        with st.expander("📄 查看完整 API 回應", expanded=not bool(video_url and video_url.startswith("http"))):
             st.json(final_data)
 
 st.divider()
