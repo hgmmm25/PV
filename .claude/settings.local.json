@@ -51,7 +51,24 @@
       "Bash(taskkill //PID 26112 //F)",
       "Bash(taskkill //PID 9268 //F)",
       "Bash(curl -s \"http://localhost:3200/history-viewer/\")",
-      "Bash(taskkill //PID 31172 //F)"
+      "Bash(taskkill //PID 31172 //F)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Read(//c/Users/xx318/.cargo/bin//**)",
+      "Read(//c/Users/xx318/.rustup//**)",
+      "Bash(sleep 10 && cat /c/Users/xx318/AppData/Local/Temp/claude/D--PV/66a9a6af-ddf8-4a1f-8d82-2ab4bf0128ab/tasks/bwh94ndg0.output 2>/dev/null | tail -50)",
+      "Bash(curl -s http://localhost:3200)",
+      "Bash(tasklist)",
+      "Bash(taskkill //F //PID 17140)",
+      "Bash(pkill -f \"vite --port 3200\")",
+      "Bash(curl -sI http://localhost:3200/history-viewer/)",
+      "Bash(npm run *)",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"tauri\")",
+      "Bash(curl -s http://localhost:1420)",
+      "Bash(curl -s http://localhost:8501)",
+      "Bash(curl -s http://localhost:8502)",
+      "Bash(curl -s http://localhost:8503)"
     ]
   }
 }

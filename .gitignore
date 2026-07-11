@@ -23,3 +23,8 @@ node_modules/
 history-viewer/node_modules/
 history-viewer/dist/
 history-viewer/public/history
+
+# Tauri
+src-tauri/target/
+dist/
+*.exe
