@@ -7,6 +7,7 @@ Agnes Video V2.0 — Streamlit GUI 桌面網頁應用程式 (效能優化版)
   • 關鍵幀動畫 (Keyframe Animation)
 """
 
+import json
 import os
 import time
 from datetime import datetime
@@ -396,6 +397,36 @@ def poll_video_status(video_id: str, headers: dict) -> dict | None:
         time.sleep(POLL_INTERVAL_SECONDS)
     return None
 
+def save_generation_history(generation_mode: str, prompt: str, negative_prompt: str,
+                            image_source: str, video_url: str) -> None:
+    """將成功的生成記錄追加寫入 history/history_YYYY-MM-DD.json"""
+    _HISTORY_DIR = "history"
+    record = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "generation_mode": generation_mode,
+        "prompt": prompt,
+        "negative_prompt": negative_prompt,
+        "image_source": image_source,
+        "video_url": video_url,
+    }
+
+    os.makedirs(_HISTORY_DIR, exist_ok=True)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    filepath = os.path.join(_HISTORY_DIR, f"history_{today_str}.json")
+
+    history_list: list[dict] = []
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                history_list = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            history_list = []
+
+    history_list.append(record)
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(history_list, f, ensure_ascii=False, indent=2)
+
 if st.button("🚀 開始生成視訊", type="primary", width="stretch"):
     if not api_key.strip():
         st.error("❌ 請先在側邊欄輸入您的 API Key。")
@@ -494,6 +525,14 @@ if st.button("🚀 開始生成視訊", type="primary", width="stretch"):
 
         with st.expander("📄 查看完整 API 回應", expanded=not bool(video_url and video_url.startswith("http"))):
             st.json(final_data)
+
+        # 儲存生成記錄到本地 history
+        _img_src = ""
+        if generation_mode == "圖生視頻":
+            _img_src = image_url_single.strip()
+        elif generation_mode == "關鍵幀動畫":
+            _img_src = ", ".join(extra_image_urls)
+        save_generation_history(generation_mode, prompt.strip(), negative_prompt.strip(), _img_src, video_url)
 
 st.divider()
 st.caption(f"Agnes Video V2.0 GUI — Powered by Streamlit | 模型：`{MODEL_NAME}`")

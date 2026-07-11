@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "history-viewer",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "3200"],
+      "cwd": "history-viewer",
+      "port": 3200,
+      "autoPort": true
+    }
+  ]
+}
