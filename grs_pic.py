@@ -171,10 +171,16 @@ if st.button("📋 從剪貼簿貼上"):
 # 圖生圖 — 參考圖
 extra_images: list[str] = []
 if generation_mode == "圖生圖":
+    # 從 Base64 工具「選入」：在 widget 渲染前把值寫入 widget 自己的 key，
+    # 這樣即使 widget 已存在（非首次渲染），值也能正確更新。
+    if "grs_img_url_input" in st.session_state:
+        st.session_state["img_url_input"] = st.session_state.pop("grs_img_url_input")
+
     img_url = st.text_input(
         "🖼️ 參考圖片 URL",
-        placeholder="https://example.com/image.png",
-        help="輸入一張可公開訪問的圖片網址（支援 Base64 與 URL）。",
+        key="img_url_input",
+        placeholder="https://example.com/image.png 或 Base64 data URI",
+        help="輸入一張可公開訪問的圖片網址（支援 Base64 與 URL）。可透過下方 Base64 工具自動填入。",
     )
     if img_url.strip():
         extra_images.append(img_url.strip())
@@ -191,16 +197,30 @@ with st.expander("🔄 圖片 → Base64 轉換工具", expanded=False):
         key="grs_b64_uploader",
         help="支援 PNG、JPG、JPEG 格式。上傳後自動轉為 Base64 data URI。",
     )
+
+    # 利用 session_state 快取，避免 Rerun 時重複計算
     if uploaded_file:
-        try:
-            img = Image.open(uploaded_file).convert("RGB")
-            buf = BytesIO()
-            img.save(buf, format="PNG")
-            b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
-            st.session_state["grs_b64_result"] = f"data:image/png;base64,{b64_str}"
-            st.session_state["grs_b64_filename"] = uploaded_file.name
-        except Exception as e:
-            st.error(f"❌ 圖片處理失敗：{e}")
+        _file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+        if st.session_state.get("grs_b64_file_id") != _file_id:
+            try:
+                img = Image.open(uploaded_file)
+                fmt = img.format or "PNG"
+                has_alpha = img.mode in ("RGBA", "LA", "PA")
+
+                buf = BytesIO()
+                if fmt == "JPEG" and not has_alpha:
+                    img.convert("RGB").save(buf, format="JPEG", quality=90)
+                    mime_type = "image/jpeg"
+                else:
+                    img.convert("RGBA" if has_alpha else "RGB").save(buf, format="PNG")
+                    mime_type = "image/png"
+
+                b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+                st.session_state["grs_b64_result"] = f"data:{mime_type};base64,{b64_str}"
+                st.session_state["grs_b64_filename"] = uploaded_file.name
+                st.session_state["grs_b64_file_id"] = _file_id
+            except Exception as e:
+                st.error(f"❌ 圖片處理失敗：{e}")
 
     # 顯示結果
     if st.session_state.get("grs_b64_result"):
@@ -210,18 +230,15 @@ with st.expander("🔄 圖片 → Base64 轉換工具", expanded=False):
         _b64_only = _data_uri[_b64_prefix_len:]
         _size_kb = len(_b64_only) * 3 / 4 / 1024
 
+        st.success("✅ 轉換成功！已生成 Base64 資料")
         st.markdown(f"**🖼️ 來源：** `{_fname}`　|　**📦 Base64 大小：** {_size_kb:.1f} KB")
 
-        try:
-            _preview_bytes = base64.b64decode(_b64_only)
-            st.image(Image.open(BytesIO(_preview_bytes)), caption="預覽", width="stretch")
-        except Exception:
-            pass
+        # 直接用上傳檔案預覽，不再 base64 → bytes 解碼
+        if uploaded_file:
+            st.image(uploaded_file, caption="預覽", width="stretch")
 
-        _b64_col1, _b64_col2 = st.columns([3, 1])
+        _b64_col1, _b64_col2, _b64_col3 = st.columns([2, 1, 1])
         with _b64_col1:
-            st.code(_data_uri, language=None)
-        with _b64_col2:
             st.download_button(
                 label="📥 下載 Base64 文字檔",
                 data=_data_uri,
@@ -229,6 +246,15 @@ with st.expander("🔄 圖片 → Base64 轉換工具", expanded=False):
                 mime="text/plain",
                 key="grs_b64_download",
             )
+        with _b64_col2:
+            if st.button("📌 選入參考圖欄位", key="grs_b64_select"):
+                st.session_state["grs_img_url_input"] = _data_uri
+                st.toast("✅ 已填入「參考圖片 URL」欄位", icon="📌")
+                st.rerun()
+        with _b64_col3:
+            if st.button("📋 複製到剪貼簿", key="grs_b64_copy"):
+                st.session_state["grs_b64_clipboard"] = _data_uri
+                st.toast("✅ Base64 資料已準備就緒", icon="📋")
 
 st.divider()
 

@@ -11,3 +11,6 @@ venv/
 # IDE
 .vscode/
 .idea/
+
+# 縮略圖
+.thumbnail_cache/
