@@ -14,3 +14,12 @@ venv/
 
 # 縮略圖
 .thumbnail_cache/
+
+# 生成歷史記錄
+history/
+
+# Node.js / History Viewer
+node_modules/
+history-viewer/node_modules/
+history-viewer/dist/
+history-viewer/public/history
